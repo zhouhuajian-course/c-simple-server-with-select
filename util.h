@@ -1,0 +1,1 @@
+char* strupr(char* str);
