@@ -7,9 +7,8 @@ typedef struct {
     char outbuf[8]; // 暂时支持8个字符 除去\0 其实是7个字符
 } client;
 
-client client_create(int fd);
-void client_input(client *c);
-void client_output(client *c);
-void client_close(client *c);
+void client_input(client *c_ptr);
+void client_output(client *c_ptr);
+void client_close(client *c_ptr);
 
 #endif

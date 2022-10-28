@@ -1,24 +1,8 @@
-// 简单的服务器 客户端发送一个字符 
-// 简单的把客户端发过来的字母进行大写
-// 使用IO多路复用的select
-
-//#include <stdio.h>
-//#include <string.h>
-//#include <stdlib.h>
-//#include <unistd.h>
-//#include <arpa/inet.h>
-//#include <sys/socket.h>
-//#include <netinet/in.h>
-//
-//#include <sys/select.h>
-//
-//#include <sys/time.h>
-//#include <sys/types.h>
-//#include <unistd.h>
-//#include "util.h"
 
 #include "server.h"
-#include "client.h"
+#include <string.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 
 void init_server(_server *s) {
     // serverSocketFileDescriptor
@@ -44,15 +28,13 @@ int accept_client(_server *s) {
     );
 }
 
-void process_client_query(client *c) {
+void process_client_query(char *output, char *input) {
     // 简单的把客户端发过来的字符进行ASCII+1
-    char buf[8];
+    // 假设做了很多处理操作
     int i = 0;
-    while (c->inbuf[i] != '\0') {
-        buf[i] = c->inbuf[i]++;
+    while (input[i] != '\0') {
+        output[i] = input[i] + 1;
+        i++;
     }
-    buf[i] = '\0';
-    // 可优化 假设做了很多处理操作
-    memset(c->outbuf, '\0', sizeof(c->outbuf));
-    memcpy(c->outbuf, buf, strlen(buf) + 1);
+    output[i] = '\0';
 }

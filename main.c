@@ -1,6 +1,8 @@
 // author zhouhuajian
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <sys/select.h>
 #include "config.h"
 #include "server.h"
 #include "client.h"
@@ -33,7 +35,7 @@ int main(int argc, char** argv) {
         fd_set tmpexceptfds = exceptfds;
 
         print_all_fds(&readfds, "read");
-        print_all_fds(&readfds, "write");
+        print_all_fds(&writefds, "write");
 
         int readynum = select(
             FD_SETSIZE,
@@ -43,21 +45,24 @@ int main(int argc, char** argv) {
         if (readynum <= 0) exit(1);
         printf("(%d) ", readynum);
         new_client_fd = -1;
-        for (fd = 0; fd < FD_SETSIZE; fd++) {
+        int fd = 0;
+        for (; fd < FD_SETSIZE; fd++) {
             // 有可读的fd
             if (FD_ISSET(fd, &tmpreadfds) && fd != new_client_fd) {
                 if (fd == server.fd) {
                     int client_fd = accept_client(&server);
-                    client c = client_create(client_fd);
-                    clients[c.fd] = c;
+                    clients[client_fd].fd = client_fd;
+
                     FD_SET(client_fd, &readfds);
                     new_client_fd = client_fd;
                     printf("accept a client, new client is %d\n", client_fd);
                 } else {
                     printf("read from client %d\n", fd);
-                    client c = clients[fd];
-                    client_input(&c);
-                    process_client_query(&c);
+                    client *c_ptr = &clients[fd];
+                    // printf("%d %p %p\n", clients[fd].fd, c_ptr, &clients[fd]);
+                    client_input(c_ptr);
+                    process_client_query(c_ptr->outbuf, c_ptr->inbuf);
+                    // printf("%s, %s\n", c_ptr->inbuf, c_ptr->outbuf);
                     // 加入到监听可写的fds
                     FD_CLR(fd, &readfds);
                     FD_SET(fd, &writefds);
@@ -66,9 +71,9 @@ int main(int argc, char** argv) {
             // 有可写的fd
             if (FD_ISSET(fd, &tmpwritefds)) {
                 printf("write to client %d\n", fd);
-                client c = clients[fd];
-                client_output(&c);
-                client_close(&c);
+                client *c_ptr = &clients[fd];
+                client_output(c_ptr);
+                client_close(c_ptr);
                 FD_CLR(fd, &writefds);
             }
             // 有出现异常的fd
