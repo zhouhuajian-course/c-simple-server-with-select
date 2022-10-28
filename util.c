@@ -1,3 +1,17 @@
+#include <select.h>
+#include <stdio.h>
+
+void print_all_fds(fd_set *fds_ptr, char *type) {
+    printf("all %sfds: ", type);
+    int fd;
+    for (fd = 0; fd < FD_SETSIZE; fd++) {
+        if (FD_ISSET(fd, fds_ptr)) {
+            printf("%d ", fd);
+        }
+    }
+    printf("\n");
+}
+
 char *strupr(char* str)
 {
     char *origin = str;
